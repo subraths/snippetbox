@@ -4,11 +4,8 @@ services:
     image: busybox
     command: tail -f /dev/null
   golang:
-    build:
-      context: ./
-      target: dev
-      dockerfile: Dockerfile
-    command: go run main.go
+    build: .
+    command: go run ./cmd/web
     ports:
       - 4000:4000
     develop:
@@ -16,3 +13,5 @@ services:
         - action: sync+restart
           path: ./
           target: /usr/src/app
+        - action: rebuild
+          path: go.mod
