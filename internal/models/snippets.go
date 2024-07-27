@@ -20,7 +20,7 @@ type SnippetModel struct {
 
 func (m *SnippetModel) Insert(title string, content string, expires int) (int, error) {
 	query := `INSERT INTO snippets (title, content, created, expires)
-            VALUES($1, $2, NOW(), NOW() + INTERVAL '$3 days')
+            VALUES($1, $2, NOW(), NOW() + $3 * INTERVAL '1 day')
             RETURNING id`
 
 	stmt, err := m.DB.Prepare(query)
@@ -53,7 +53,7 @@ func (m *SnippetModel) Get(id int) (*Snippet, error) {
 	err = stmt.QueryRow(id).Scan(&s.ID, &s.Title, &s.Content, &s.Created, &s.Expires)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, sql.ErrNoRows
+			return nil, ErrNoRecord
 		} else {
 			return nil, err
 		}
