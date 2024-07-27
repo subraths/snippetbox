@@ -1,13 +1,16 @@
 services:
-  # This is a dummy service that will run forever. If you have a service that does run forever (like a database), you can skip this.
   db:
     image: postgres:alpine
     restart: always
+    ports:
+      - 5432:5432
     volumes:
-      - snippetbox_pg_data:/var/lib/postgresql/data
+      - pg_data:/var/lib/postgresql/data
     environment:
       POSTGRES_PASSWORD: secret
-  golang:
+      POSTGRES_USER: mydb
+      POSTGRES_DB: mydb
+  web:
     build: .
     command: go run ./cmd/web
     ports:
@@ -22,4 +25,5 @@ services:
         - action: rebuild
           path: go.mod
 volumes:
-  snippetbox_pg_data:
+  pg_data:
+    external: true
