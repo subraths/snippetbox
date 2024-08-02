@@ -24,6 +24,12 @@ func (app *application) routes() http.Handler {
 	router.Handler(http.MethodGet, "/snippet/create", dynamic.ThenFunc(app.snippetCreate))
 	router.Handler(http.MethodPost, "/snippet/create", dynamic.ThenFunc(app.snippetCreatePost))
 
+	router.Handler(http.MethodGet, "/usr/signup", dynamic.ThenFunc(app.userSignup))
+	router.Handler(http.MethodPost, "/usr/signup", dynamic.ThenFunc(app.userSignupPost))
+	router.Handler(http.MethodGet, "/usr/login", dynamic.ThenFunc(app.userLogin))
+	router.Handler(http.MethodPost, "/usr/login", dynamic.ThenFunc(app.userLoginPost))
+	router.Handler(http.MethodPost, "/usr/logout", dynamic.ThenFunc(app.userLogoutPost))
+
 	standard := alice.New(app.recoverPanic, app.logRequest, secureHeaders)
 
 	return standard.Then(router)
