@@ -12,21 +12,25 @@ import (
 
 	"example.com/internal/models"
 
+	"github.com/alexedwards/scs/redisstore"
+	"github.com/alexedwards/scs/v2"
 	"github.com/go-playground/form/v4"
+	"github.com/gomodule/redigo/redis"
 	_ "github.com/lib/pq"
 )
 
 type application struct {
-	errorLog      *log.Logger
-	infoLog       *log.Logger
-	snippets      *models.SnippetModel
-	templateCache map[string]*template.Template
-	formDecoder   *form.Decoder
+	errorLog       *log.Logger
+	infoLog        *log.Logger
+	snippets       *models.SnippetModel
+	templateCache  map[string]*template.Template
+	formDecoder    *form.Decoder
+	sessionManager *scs.SessionManager
 }
 
 func main() {
 	addr := flag.String("addr", ":4000", "HTTP Network address")
-	dsn := flag.String("dsn", "postgres://mydb:secret@snippetbox-db-1/mydb?sslmode=disable", "Postgres data source name")
+	dsn := flag.String("dsn", "postgres://mydb:secret@postgres/mydb?sslmode=disable", "Postgres data source name")
 	flag.Parse()
 
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
@@ -44,14 +48,26 @@ func main() {
 		errorLog.Fatal(err)
 	}
 
+	redisPool := &redis.Pool{
+		MaxIdle: 10,
+		Dial: func() (redis.Conn, error) {
+			return redis.Dial("tcp", "redis:6379")
+		},
+	}
+
 	formDecoder := form.NewDecoder()
 
+	sessionManager := scs.New()
+	sessionManager.Store = redisstore.New(redisPool)
+	sessionManager.Lifetime = 12 * time.Hour
+
 	app := &application{
-		errorLog:      errorLog,
-		infoLog:       infoLog,
-		snippets:      &models.SnippetModel{DB: db},
-		templateCache: templateCache,
-		formDecoder:   formDecoder,
+		errorLog:       errorLog,
+		infoLog:        infoLog,
+		snippets:       &models.SnippetModel{DB: db},
+		templateCache:  templateCache,
+		formDecoder:    formDecoder,
+		sessionManager: sessionManager,
 	}
 
 	srv := &http.Server{

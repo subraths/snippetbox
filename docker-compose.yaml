@@ -1,7 +1,16 @@
 services:
+  redis:
+    container_name: redis
+    image: redis:alpine
+    ports:
+      - 6379:6379
+    volumes:
+      - redis_data:/data
+    environment:
+      REDIS_PASSWORD: secret
   db:
+    container_name: postgres
     image: postgres:alpine
-    restart: on-failure:3
     ports:
       - 5432:5432
     volumes:
@@ -17,6 +26,7 @@ services:
       - 4000:4000
     depends_on:
       - db
+      - redis
     develop:
       watch:
         - action: sync+restart
@@ -26,4 +36,6 @@ services:
           path: go.mod
 volumes:
   pg_data:
+    external: true
+  redis_data:
     external: true
